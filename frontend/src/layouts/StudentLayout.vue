@@ -8,7 +8,7 @@
       >
         <el-menu-item index="/student/dashboard">
           <el-icon><DataLine /></el-icon>
-          <span>仪表盘</span>
+          <span>首页</span>
         </el-menu-item>
         <el-menu-item index="/student/grades">
           <el-icon><Document /></el-icon>

@@ -6,7 +6,7 @@
   >
     <el-menu-item index="/teacher/dashboard">
       <el-icon><House /></el-icon>
-      <span>仪表盘</span>
+      <span>首页</span>
     </el-menu-item>
 
     <el-menu-item index="/teacher/course-management">
