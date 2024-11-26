@@ -39,10 +39,10 @@
           <el-option
             v-for="student in filteredStudents"
             :key="student._id"
-            :label="student.username"
+            :label="student.name"
             :value="student._id"
           >
-            <span>{{ student.username }}</span>
+            <span>{{ student.name }}</span>
             <span class="student-info">{{ student.studentId }}</span>
           </el-option>
         </el-select>
@@ -84,7 +84,7 @@
     >
       <el-table-column label="学生">
         <template #default="{ row }">
-          {{ row.studentId?.username || '未知学生' }}
+          {{ row.studentId?.name || '未知学生' }}
         </template>
       </el-table-column>
       <el-table-column label="课程">
@@ -141,7 +141,7 @@
             <el-option
               v-for="student in students"
               :key="student._id"
-              :label="student.username"
+              :label="student.name"
               :value="student._id"
             />
           </el-select>
@@ -434,7 +434,7 @@ const filterStudent = (query) => {
   studentSearchQuery.value = query
   if (query) {
     filteredStudents.value = students.value.filter(student => 
-      student.username.toLowerCase().includes(query.toLowerCase()) ||
+      student.name.toLowerCase().includes(query.toLowerCase()) ||
       student.studentId?.toLowerCase().includes(query.toLowerCase())
     )
   } else {
