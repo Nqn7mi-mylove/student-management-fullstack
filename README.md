@@ -178,9 +178,10 @@ node src/scripts/init-data.js
 - 加载动画
 
 ## 开发团队
-- 前端开发：[Your Name]
-- 后端开发：[Your Name]
-- UI设计：[Your Name]
+- 前端开发：Nqn7mi
+- 后端开发：Nqn7mi
+- UI设计：Nqn7mi
+- With the help of Cascade
 
 ## 许可证
 MIT License
