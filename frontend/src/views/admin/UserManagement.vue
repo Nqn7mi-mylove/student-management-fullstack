@@ -62,6 +62,13 @@
           />
         </el-form-item>
         
+        <el-form-item label="姓名" prop="name">
+          <el-input 
+            v-model="form.name"
+            placeholder="请输入姓名"
+          />
+        </el-form-item>
+        
         <el-form-item label="邮箱" prop="email">
           <el-input 
             v-model="form.email"
@@ -144,6 +151,7 @@ const userForm = ref(null)
 
 const form = reactive({
   username: '',
+  name: '',
   email: '',
   role: '',
   password: ''
@@ -153,6 +161,9 @@ const rules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 2, message: '用户名长度至少为2个字符', trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' }
   ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
@@ -201,6 +212,7 @@ const showCreateDialog = () => {
   dialogType.value = 'create'
   Object.assign(form, {
     username: '',
+    name: '',
     email: '',
     role: '',
     password: ''
@@ -212,6 +224,7 @@ const handleEdit = (user) => {
   dialogType.value = 'edit'
   Object.assign(form, {
     username: user.username,
+    name: user.name,
     email: user.email,
     role: user.role
   })
@@ -233,6 +246,7 @@ const handleSubmit = async () => {
       try {
         const userData = {
           username: form.username,
+          name: form.name,
           email: form.email,
           role: form.role,
           ...(dialogType.value === 'create' ? { password: form.password } : {})
