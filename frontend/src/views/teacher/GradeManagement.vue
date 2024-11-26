@@ -11,9 +11,11 @@
     <el-form :inline="true" class="grade-filters">
       <el-form-item label="课程">
         <el-select 
-          :modelValue="filters.course"
-          @update:modelValue="filters.course = $event"
+          v-model="filters.courseId"
           placeholder="所有课程"
+          clearable
+          style="width: 200px;"
+          @change="handleFilterChange"
         >
           <el-option
             v-for="course in courses"
@@ -23,8 +25,24 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="学生">
+        <el-select 
+          v-model="filters.studentId"
+          placeholder="所有学生"
+          clearable
+          style="width: 200px;"
+          @change="handleFilterChange"
+        >
+          <el-option
+            v-for="student in students"
+            :key="student._id"
+            :label="student.username"
+            :value="student._id"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="fetchGrades">搜索</el-button>
+        <el-button type="primary" @click="handleFilterChange">搜索</el-button>
         <el-button @click="resetFilters">重置</el-button>
       </el-form-item>
     </el-form>
@@ -79,8 +97,7 @@
       >
         <el-form-item label="学生" prop="studentId">
           <el-select
-            :modelValue="form.studentId"
-            @update:modelValue="form.studentId = $event"
+            v-model="form.studentId"
             placeholder="选择学生"
             filterable
           >
@@ -95,8 +112,7 @@
 
         <el-form-item label="课程" prop="course">
           <el-select
-            :modelValue="form.course"
-            @update:modelValue="form.course = $event"
+            v-model="form.course"
             placeholder="选择课程"
             filterable
           >
@@ -111,8 +127,7 @@
 
         <el-form-item label="分数" prop="score">
           <el-input-number
-            :modelValue="form.score"
-            @update:modelValue="form.score = $event"
+            v-model="form.score"
             :min="0"
             :max="100"
             :precision="1"
@@ -121,8 +136,7 @@
 
         <el-form-item label="评语" prop="comments">
           <el-input
-            :modelValue="form.comments"
-            @update:modelValue="form.comments = $event"
+            v-model="form.comments"
             type="textarea"
             placeholder="可选评语"
           />
@@ -180,7 +194,8 @@ const selectedGrade = ref(null)
 const currentUser = ref({})
 
 const filters = reactive({
-  course: ''
+  courseId: '',
+  studentId: ''
 })
 
 const form = reactive({
@@ -202,16 +217,28 @@ const rules = {
   ]
 }
 
+const handleFilterChange = async () => {
+  await fetchGrades()
+}
+
 const fetchGrades = async () => {
   loading.value = true
   try {
-    const params = {}
-    if (filters.course) {
-      params.course = filters.course
+    // 构建查询参数
+    const queryParams = new URLSearchParams()
+    
+    if (filters.courseId) {
+      queryParams.append('courseId', filters.courseId)
     }
-    const response = await axios.get('/teacher/grades', { params })
+    if (filters.studentId) {
+      queryParams.append('studentId', filters.studentId)
+    }
+
+    // 发送请求
+    const response = await axios.get(`/teacher/grades?${queryParams.toString()}`)
     grades.value = response.data
   } catch (error) {
+    console.error('获取成绩失败:', error)
     ElMessage.error('获取成绩失败')
   } finally {
     loading.value = false
@@ -303,7 +330,8 @@ const confirmDelete = async () => {
 }
 
 const resetFilters = () => {
-  filters.course = ''
+  filters.courseId = ''
+  filters.studentId = ''
   fetchGrades()
 }
 
@@ -335,5 +363,24 @@ onMounted(() => {
 
 .grade-filters {
   margin-bottom: 20px;
+  background-color: #f5f7fa;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.grade-filters .el-form-item {
+  margin-bottom: 0;
+  margin-right: 15px;
+}
+
+.grade-filters .el-select {
+  width: 200px;
+}
+
+:deep(.el-select-dropdown__item) {
+  padding-right: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
