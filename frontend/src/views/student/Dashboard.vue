@@ -5,11 +5,11 @@
         <el-card class="dashboard-card">
           <template #header>
             <div class="card-header">
-              <span>课程总数</span>
+              <span>总学分</span>
             </div>
           </template>
           <div class="card-content">
-            <el-statistic :value="statistics.totalCourses" title="课程">
+            <el-statistic :value="statistics.totalCredits" title="学分">
               <template #prefix>
                 <el-icon><Document /></el-icon>
               </template>
@@ -39,13 +39,13 @@
         <el-card class="dashboard-card">
           <template #header>
             <div class="card-header">
-              <span>最高分数</span>
+              <span>总绩点</span>
             </div>
           </template>
           <div class="card-content">
-            <el-statistic :value="statistics.highestScore" title="最高分">
+            <el-statistic :value="statistics.gpa" :precision="2" title="GPA">
               <template #prefix>
-                <el-icon><TopRight /></el-icon>
+                <el-icon><TrendCharts /></el-icon>
               </template>
             </el-statistic>
           </div>
@@ -56,13 +56,13 @@
         <el-card class="dashboard-card">
           <template #header>
             <div class="card-header">
-              <span>最低分数</span>
+              <span>课程总数</span>
             </div>
           </template>
           <div class="card-content">
-            <el-statistic :value="statistics.lowestScore" title="最低分">
+            <el-statistic :value="statistics.totalCourses" title="课程">
               <template #prefix>
-                <el-icon><BottomLeft /></el-icon>
+                <el-icon><Collection /></el-icon>
               </template>
             </el-statistic>
           </div>
@@ -107,7 +107,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Document, DataLine, TopRight, BottomLeft } from '@element-plus/icons-vue'
+import { Document, DataLine, TrendCharts, Collection } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { getSemesterLabel } from '../../utils/semesterUtils'
@@ -115,8 +115,8 @@ import { getSemesterLabel } from '../../utils/semesterUtils'
 const statistics = ref({
   totalCourses: 0,
   averageScore: 0,
-  highestScore: 0,
-  lowestScore: 0
+  totalCredits: 0,
+  gpa: 0
 })
 
 const recentGrades = ref([])

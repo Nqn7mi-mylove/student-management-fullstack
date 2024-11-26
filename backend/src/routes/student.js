@@ -49,21 +49,36 @@ router.get('/courses', auth, checkRole('student'), async (req, res) => {
 router.get('/dashboard/statistics', auth, checkRole('student'), async (req, res) => {
   try {
     const grades = await Grade.find({ studentId: req.user.id })
-      .populate('courseId', 'name');
+      .populate('courseId', 'name credits');
     
-    const scores = grades.map(grade => grade.score);
     const totalCourses = grades.length;
+    let totalCredits = 0;
+    let weightedGradePoints = 0;
+    let totalScore = 0;
+
+    grades.forEach(grade => {
+      const credits = grade.courseId.credits || 0;
+      totalCredits += credits;
+      totalScore += grade.score;
+      
+      // 计算绩点：(分数-50)/10，但如果分数低于60分，绩点为0
+      const gradePoint = grade.score >= 60 ? (grade.score - 50) / 10 : 0;
+      weightedGradePoints += gradePoint * credits;
+    });
+
     const averageScore = totalCourses > 0 
-      ? scores.reduce((acc, curr) => acc + curr, 0) / totalCourses 
+      ? totalScore / totalCourses 
       : 0;
-    const highestScore = totalCourses > 0 ? Math.max(...scores) : 0;
-    const lowestScore = totalCourses > 0 ? Math.min(...scores) : 0;
+    
+    const gpa = totalCredits > 0 
+      ? weightedGradePoints / totalCredits 
+      : 0;
 
     res.json({
       totalCourses,
       averageScore,
-      highestScore,
-      lowestScore
+      totalCredits,  // 总学分
+      gpa           // 总绩点
     });
   } catch (error) {
     console.error('Dashboard statistics error:', error);
