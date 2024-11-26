@@ -47,6 +47,29 @@
       </el-form-item>
     </el-form>
 
+    <!-- 成绩分布图表 -->
+    <el-card class="grade-chart" v-loading="loading">
+      <template #header>
+        <div class="card-header">
+          <span>成绩分布</span>
+          <el-select
+            v-model="chartFilters.courseId"
+            placeholder="选择课程"
+            clearable
+            @change="updateChart"
+          >
+            <el-option
+              v-for="course in courses"
+              :key="course._id"
+              :label="course.name"
+              :value="course._id"
+            />
+          </el-select>
+        </div>
+      </template>
+      <div ref="chartRef" style="height: 400px;"></div>
+    </el-card>
+
     <!-- 成绩表格 -->
     <el-table
       v-loading="loading"
@@ -193,24 +216,42 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 图表 -->
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import { Edit, Delete } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import { getSemesterLabel, getSemesterOptions } from '../../utils/semesterUtils'
+import * as echarts from 'echarts'
 
 const grades = ref([])
 const students = ref([])
 const courses = ref([])
+const chartRef = ref(null)
+let chart = null
 
 const filters = ref({
   courseId: '',
   studentId: ''
 })
+
+const chartFilters = ref({
+  courseId: ''
+})
+
+// 成绩区间定义
+const scoreRanges = [
+  { min: 90, max: 100, label: '优秀(90-100)' },
+  { min: 80, max: 89, label: '良好(80-89)' },
+  { min: 70, max: 79, label: '中等(70-79)' },
+  { min: 60, max: 69, label: '及格(60-69)' },
+  { min: 0, max: 59, label: '不及格(0-59)' }
+]
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -378,10 +419,108 @@ const resetFilters = () => {
   fetchGrades()
 }
 
+// 初始化图表
+const initChart = () => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(chartRef.value)
+  updateChart()
+}
+
+// 更新图表数据
+const updateChart = () => {
+  if (!chart) return
+
+  const filteredGrades = grades.value.filter(grade => 
+    !chartFilters.value.courseId || grade.courseId._id === chartFilters.value.courseId
+  )
+
+  // 统计各分数段人数
+  const statistics = scoreRanges.map(range => ({
+    ...range,
+    count: filteredGrades.filter(grade => 
+      grade.score >= range.min && grade.score <= range.max
+    ).length
+  }))
+
+  const option = {
+    title: {
+      text: '成绩分布统计',
+      left: 'center'
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow'
+      }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: statistics.map(item => item.label),
+      axisLabel: {
+        interval: 0,
+        rotate: 30
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: '人数',
+      minInterval: 1
+    },
+    series: [
+      {
+        name: '学生人数',
+        type: 'bar',
+        data: statistics.map(item => item.count),
+        itemStyle: {
+          color: function(params) {
+            const colors = ['#67C23A', '#409EFF', '#E6A23C', '#F56C6C', '#909399']
+            return colors[params.dataIndex]
+          }
+        },
+        label: {
+          show: true,
+          position: 'top'
+        }
+      }
+    ]
+  }
+
+  chart.setOption(option)
+}
+
+// 监听窗口大小变化
+window.addEventListener('resize', () => {
+  chart?.resize()
+})
+
+// 监听成绩数据变化
+watch(grades, () => {
+  updateChart()
+})
+
+// 在组件卸载时清理
+onUnmounted(() => {
+  window.removeEventListener('resize', () => {
+    chart?.resize()
+  })
+  chart?.dispose()
+})
+
 onMounted(() => {
   fetchGrades()
   fetchStudents()
   fetchCourses()
+  nextTick(() => {
+    initChart()
+  })
   axios.get('/teacher/current-user').then(response => {
     const currentUser = response.data
   })
@@ -417,6 +556,20 @@ onMounted(() => {
 }
 
 .grade-filters .el-select {
+  width: 200px;
+}
+
+.grade-chart {
+  margin-bottom: 20px;
+}
+
+.grade-chart .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.grade-chart .el-select {
   width: 200px;
 }
 
