@@ -14,7 +14,11 @@
     >
       <el-table-column prop="code" label="课程代码" />
       <el-table-column prop="name" label="课程名称" />
-      <el-table-column prop="semester" label="学期" />
+      <el-table-column prop="semester" label="学期">
+        <template #default="{ row }">
+          {{ getSemesterLabel(row.semester) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="credits" label="学分" />
       <el-table-column prop="description" label="课程描述" />
       <el-table-column label="操作" width="200">
@@ -67,12 +71,16 @@
         
         <el-form-item label="学期" prop="semester">
           <el-select 
-            :modelValue="form.semester"
-            @update:modelValue="form.semester = $event"
+            v-model="form.semester"
             placeholder="选择学期"
+            style="width: 100%"
           >
-            <el-option label="2023年秋季学期" value="Fall 2023" />
-            <el-option label="2024年春季学期" value="Spring 2024" />
+            <el-option
+              v-for="option in getSemesterOptions()"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
           </el-select>
         </el-form-item>
 
@@ -132,6 +140,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { Edit, Delete } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { getSemesterLabel, getSemesterOptions } from '../../utils/semesterUtils'
 
 const loading = ref(false)
 const submitting = ref(false)

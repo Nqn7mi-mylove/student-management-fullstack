@@ -88,7 +88,11 @@
           >
             <el-table-column prop="studentId.name" label="学生" />
             <el-table-column prop="courseId.name" label="课程" />
-            <el-table-column prop="semester" label="学期" />
+            <el-table-column prop="semester" label="学期">
+              <template #default="{ row }">
+                {{ getSemesterLabel(row.semester) }}
+              </template>
+            </el-table-column>
             <el-table-column prop="score" label="分数">
               <template #default="{ row }">
                 <span :class="getScoreClass(row.score)">{{ row.score }}/100</span>
@@ -107,6 +111,7 @@ import { ref, onMounted } from 'vue'
 import { User, Document, DataLine, TrendCharts } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { getSemesterLabel } from '../../utils/semesterUtils'
 
 const statistics = ref({
   totalStudents: 0,

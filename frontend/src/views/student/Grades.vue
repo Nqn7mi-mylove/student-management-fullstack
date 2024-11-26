@@ -26,10 +26,10 @@
               @change="handleFilterChange"
             >
               <el-option
-                v-for="semester in semesters"
-                :key="semester"
-                :label="getSemesterLabel(semester)"
-                :value="semester"
+                v-for="option in getSemesterOptions()"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
               />
             </el-select>
             <el-button type="primary" @click="resetFilters">重置筛选</el-button>
@@ -101,6 +101,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { getSemesterLabel, getSemesterOptions } from '../../utils/semesterUtils'
 
 const grades = ref([])
 const courses = ref([])
@@ -108,7 +109,6 @@ const filters = ref({
   course: '',
   semester: ''
 })
-const semesters = ['Fall 2023', 'Spring 2024', 'Fall 2024']
 const loading = ref(false)
 
 const statistics = ref({
@@ -116,15 +116,6 @@ const statistics = ref({
   highest: 0,
   lowest: 0
 })
-
-const getSemesterLabel = (semester) => {
-  const semesterMap = {
-    'Fall 2023': '2023年秋季学期',
-    'Spring 2024': '2024年春季学期',
-    'Fall 2024': '2024年秋季学期'
-  }
-  return semesterMap[semester] || semester
-}
 
 const getScoreClass = (score) => {
   if (score >= 90) return 'score-excellent'

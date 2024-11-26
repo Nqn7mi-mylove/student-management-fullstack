@@ -87,7 +87,11 @@
             v-loading="loading"
           >
             <el-table-column prop="courseId.name" label="课程名称" />
-            <el-table-column prop="semester" label="学期" />
+            <el-table-column prop="semester" label="学期">
+              <template #default="{ row }">
+                {{ getSemesterLabel(row.semester) }}
+              </template>
+            </el-table-column>
             <el-table-column prop="score" label="分数" width="120">
               <template #default="{ row }">
                 <span :class="getScoreClass(row.score)">{{ row.score }}分</span>
@@ -106,6 +110,7 @@ import { ref, onMounted } from 'vue'
 import { Document, DataLine, TopRight, BottomLeft } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { getSemesterLabel } from '../../utils/semesterUtils'
 
 const statistics = ref({
   totalCourses: 0,

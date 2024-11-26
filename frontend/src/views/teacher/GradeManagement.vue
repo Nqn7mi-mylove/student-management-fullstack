@@ -94,20 +94,20 @@
     <!-- 添加/编辑成绩对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? '添加成绩' : '编辑成绩'"
+      :title="dialogTitle"
       width="500px"
     >
       <el-form
-        ref="gradeForm"
-        :model="form"
+        ref="formRef"
+        :model="editingGrade"
         :rules="rules"
-        label-width="120px"
+        label-width="100px"
       >
         <el-form-item label="学生" prop="studentId">
           <el-select
-            v-model="form.studentId"
+            v-model="editingGrade.studentId"
             placeholder="选择学生"
-            filterable
+            style="width: 100%"
           >
             <el-option
               v-for="student in students"
@@ -117,12 +117,12 @@
             />
           </el-select>
         </el-form-item>
-
-        <el-form-item label="课程" prop="course">
+        
+        <el-form-item label="课程" prop="courseId">
           <el-select
-            v-model="form.course"
+            v-model="editingGrade.courseId"
             placeholder="选择课程"
-            filterable
+            style="width: 100%"
           >
             <el-option
               v-for="course in courses"
@@ -133,33 +133,45 @@
           </el-select>
         </el-form-item>
 
+        <el-form-item label="学期" prop="semester">
+          <el-select
+            v-model="editingGrade.semester"
+            placeholder="选择学期"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="option in getSemesterOptions()"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="分数" prop="score">
           <el-input-number
-            v-model="form.score"
+            v-model="editingGrade.score"
             :min="0"
             :max="100"
-            :precision="1"
+            :precision="0"
+            style="width: 100%"
           />
         </el-form-item>
 
         <el-form-item label="评语" prop="comments">
           <el-input
-            v-model="form.comments"
+            v-model="editingGrade.comments"
             type="textarea"
-            placeholder="可选评语"
+            :rows="3"
+            placeholder="请输入评语（选填）"
           />
         </el-form-item>
       </el-form>
-      
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button
-          type="primary"
-          @click="handleSubmit"
-          :loading="submitting"
-        >
-          {{ dialogType === 'add' ? '添加' : '更新' }}
-        </el-button>
+        <span class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmit">确定</el-button>
+        </span>
       </template>
     </el-dialog>
 
@@ -187,38 +199,42 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { Edit, Delete } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { getSemesterLabel, getSemesterOptions } from '../../utils/semesterUtils'
 
-const loading = ref(false)
-const submitting = ref(false)
 const grades = ref([])
 const students = ref([])
 const courses = ref([])
-const dialogVisible = ref(false)
-const deleteDialogVisible = ref(false)
-const dialogType = ref('add')
-const selectedGrade = ref(null)
-const currentUser = ref({})
 
-const filters = reactive({
+const filters = ref({
   courseId: '',
   studentId: ''
 })
 
-const form = reactive({
+const loading = ref(false)
+const submitting = ref(false)
+const dialogVisible = ref(false)
+const deleteDialogVisible = ref(false)
+const dialogTitle = ref('')
+const editingGrade = ref({
   studentId: '',
-  course: '',
+  courseId: '',
+  semester: '',
   score: 0,
   comments: ''
 })
 
+// 表单规则
 const rules = {
   studentId: [
     { required: true, message: '请选择学生', trigger: 'change' }
   ],
-  course: [
+  courseId: [
     { required: true, message: '请选择课程', trigger: 'change' }
+  ],
+  semester: [
+    { required: true, message: '请选择学期', trigger: 'change' }
   ],
   score: [
     { required: true, message: '请输入分数', trigger: 'blur' }
@@ -240,11 +256,11 @@ const fetchGrades = async () => {
     // 构建查询参数
     const queryParams = new URLSearchParams()
     
-    if (filters.courseId) {
-      queryParams.append('courseId', filters.courseId)
+    if (filters.value.courseId) {
+      queryParams.append('courseId', filters.value.courseId)
     }
-    if (filters.studentId) {
-      queryParams.append('studentId', filters.studentId)
+    if (filters.value.studentId) {
+      queryParams.append('studentId', filters.value.studentId)
     }
 
     // 发送请求
@@ -286,26 +302,31 @@ const fetchCourses = async () => {
 }
 
 const showAddGradeDialog = () => {
-  dialogType.value = 'add'
-  form.studentId = ''
-  form.course = ''
-  form.score = 0
-  form.comments = ''
+  dialogTitle.value = '添加成绩'
+  editingGrade.value = {
+    studentId: '',
+    courseId: '',
+    semester: '',
+    score: 0,
+    comments: ''
+  }
   dialogVisible.value = true
 }
 
 const handleEdit = (grade) => {
-  dialogType.value = 'edit'
-  form.studentId = grade.studentId._id
-  form.course = grade.courseId._id
-  form.score = grade.score
-  form.comments = grade.comments
-  selectedGrade.value = grade
+  dialogTitle.value = '编辑成绩'
+  editingGrade.value = {
+    studentId: grade.studentId._id,
+    courseId: grade.courseId._id,
+    semester: grade.semester,
+    score: grade.score,
+    comments: grade.comments
+  }
   dialogVisible.value = true
 }
 
 const handleDelete = (grade) => {
-  selectedGrade.value = grade
+  editingGrade.value = grade
   deleteDialogVisible.value = true
 }
 
@@ -313,18 +334,18 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     const gradeData = {
-      studentId: form.studentId,
-      courseId: form.course,
-      score: form.score,
-      semester: 'Fall 2023',
-      comments: form.comments || ''
+      studentId: editingGrade.value.studentId,
+      courseId: editingGrade.value.courseId,
+      semester: editingGrade.value.semester,
+      score: editingGrade.value.score,
+      comments: editingGrade.value.comments || ''
     }
 
-    if (dialogType.value === 'add') {
+    if (dialogTitle.value === '添加成绩') {
       await axios.post('/teacher/grades', gradeData)
       ElMessage.success('添加成绩成功')
     } else {
-      await axios.put(`/teacher/grades/${selectedGrade.value._id}`, gradeData)
+      await axios.put(`/teacher/grades/${editingGrade.value._id}`, gradeData)
       ElMessage.success('更新成绩成功')
     }
     dialogVisible.value = false
@@ -340,7 +361,7 @@ const handleSubmit = async () => {
 const confirmDelete = async () => {
   submitting.value = true
   try {
-    await axios.delete(`/teacher/grades/${selectedGrade.value._id}`)
+    await axios.delete(`/teacher/grades/${editingGrade.value._id}`)
     ElMessage.success('删除成绩成功')
     deleteDialogVisible.value = false
     fetchGrades()
@@ -352,8 +373,8 @@ const confirmDelete = async () => {
 }
 
 const resetFilters = () => {
-  filters.courseId = ''
-  filters.studentId = ''
+  filters.value.courseId = ''
+  filters.value.studentId = ''
   fetchGrades()
 }
 
@@ -362,7 +383,7 @@ onMounted(() => {
   fetchStudents()
   fetchCourses()
   axios.get('/teacher/current-user').then(response => {
-    currentUser.value = response.data
+    const currentUser = response.data
   })
 })
 </script>
