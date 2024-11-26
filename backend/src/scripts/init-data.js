@@ -62,7 +62,7 @@ const initData = async () => {
       const username = `teacher${i + 1}`;
       const teacher = new User({
         username,
-        password: await bcrypt.hash('123456', 10),
+        password: '123456',
         role: 'teacher',
         name,
         email: generateEmail(username),
@@ -102,7 +102,7 @@ const initData = async () => {
       const username = `student${i + 1}`;
       const student = new User({
         username,
-        password: await bcrypt.hash('123456', 10),
+        password: '123456',
         role: 'student',
         name,
         email: generateEmail(username),
