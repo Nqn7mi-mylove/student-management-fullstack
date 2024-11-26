@@ -11,6 +11,7 @@
 - Vue Router (路由管理)
 - Pinia (状态管理)
 - Axios (HTTP 客户端)
+- ECharts (数据可视化)
 
 ### 后端
 - Node.js
@@ -45,6 +46,7 @@ student-management-fullstack/
 │   │   ├── routes/         # 路由
 │   │   ├── middleware/     # 中间件
 │   │   ├── utils/          # 工具函数
+│   │   ├── scripts/        # 脚本工具
 │   │   └── app.js          # 应用入口
 │   └── package.json
 │
@@ -71,7 +73,9 @@ student-management-fullstack/
 - 成绩管理
   - 录入学生成绩
   - 编辑成绩信息
-  - 成绩统计分析
+  - 成绩分布可视化
+  - 按课程筛选成绩
+  - 按学生筛选成绩
 - 个人信息管理
 
 ### 学生功能
@@ -80,65 +84,103 @@ student-management-fullstack/
   - 按学期筛选
   - 按课程筛选
 - 成绩统计
+  - 总学分统计
+  - GPA计算
   - 平均分统计
-  - 最高分/最低分
-  - 成绩趋势分析
+  - 课程数量统计
 - 个人信息管理
 
 ## 界面特点
 - 完整的中文本地化
 - 响应式设计
 - 直观的数据可视化
+  - 成绩分布柱状图
+  - 动态数据更新
+  - 交互式图表
 - 友好的用户交互
 - 统一的设计风格
 - 优雅的动画效果
 
 ## 安装和运行
 
+### 前提条件
+- Node.js >= 14
+- MongoDB >= 4.4
+- npm >= 6
+
 ### 前端
 ```bash
+# 进入前端目录
 cd frontend
+
+# 安装依赖
 npm install
+
+# 开发模式运行
 npm run dev
+
+# 构建生产版本
+npm run build
 ```
 
 ### 后端
 ```bash
+# 进入后端目录
 cd backend
+
+# 安装依赖
 npm install
+
+# 开发模式运行
 npm run dev
+
+# 生产模式运行
+npm start
 ```
 
-## 默认账号
-- 管理员：admin / admin123
-- 教师：teacher / teacher123
-- 学生：student / student123
+### 初始化示例数据
+系统提供了一个初始化脚本，可以快速生成示例数据：
+```bash
+# 进入后端目录
+cd backend
 
-## 系统要求
-- Node.js 14.0+
-- MongoDB 4.0+
-- 现代浏览器（Chrome, Firefox, Safari, Edge等）
+# 运行初始化脚本
+node src/scripts/init-data.js
+```
 
-## 注意事项
-- 首次使用请使用默认管理员账号登录
-- 请及时修改默认密码
-- 确保 MongoDB 服务已启动
-- 建议使用最新版本的浏览器
-- 定期备份数据库
+初始化脚本会生成：
+- 5名教师账号（用户名：teacher1-5）
+- 50名学生账号（用户名：student1-50）
+- 5-10门课程
+- 随机生成的成绩数据
 
-## 最近更新
-- 完整的中文界面支持
-- 优化的用户界面和交互体验
-- 改进的数据可视化展示
-- 增强的错误处理和用户提示
-- 优化的响应式布局
-- 统一的设计风格
+所有用户的初始密码均为：123456
+
+## 系统特色
+
+### 成绩管理
+- 支持按课程和学生筛选成绩
+- 成绩分布可视化展示
+- 自动计算GPA（计算公式：(课程成绩-50)/10 * 课程学分 / 总学分）
+- 低于60分的课程GPA计为0
+
+### 数据可视化
+- 使用ECharts实现成绩分布图表
+- 支持动态数据更新
+- 交互式图表操作
+- 自适应布局
+
+### 用户体验
+- 实时搜索过滤
+- 表单验证
+- 操作确认
+- 状态反馈
+- 加载动画
 
 ## 开发团队
-- 前端开发：Nqn7mi
-- 后端开发：Nqn7mi
-- UI设计：Nqn7mi
-- With the help of Cascade
+- 前端开发：[Your Name]
+- 后端开发：[Your Name]
+- UI设计：[Your Name]
 
 ## 许可证
 MIT License
