@@ -9,11 +9,23 @@ const Course = require('../models/Course');
 // Get all grades
 router.get('/grades', auth, checkRole('teacher'), async (req, res) => {
   try {
-    const grades = await Grade.find({ teacherId: req.user.id })
-      .populate('studentId', 'name')
+    const { courseId, studentId } = req.query;
+    const query = { teacherId: req.user.id };
+
+    // 添加筛选条件
+    if (courseId) {
+      query.courseId = courseId;
+    }
+    if (studentId) {
+      query.studentId = studentId;
+    }
+
+    const grades = await Grade.find(query)
+      .populate('studentId', 'username name')  // 添加username字段
       .populate('courseId', 'name');
     res.json(grades);
   } catch (error) {
+    console.error('Get grades error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

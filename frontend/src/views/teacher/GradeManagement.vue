@@ -53,15 +53,23 @@
       :data="grades"
       style="width: 100%"
     >
-      <el-table-column prop="studentId.name" label="学生" />
-      <el-table-column prop="courseId.name" label="课程" />
-      <el-table-column prop="score" label="分数">
+      <el-table-column label="学生">
+        <template #default="{ row }">
+          {{ row.studentId?.username || '未知学生' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="课程">
+        <template #default="{ row }">
+          {{ row.courseId?.name || '未知课程' }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="score" label="分数" width="100">
         <template #default="{ row }">
           {{ row.score }}/100
         </template>
       </el-table-column>
-      <el-table-column prop="comments" label="评语" />
-      <el-table-column label="操作" width="200">
+      <el-table-column prop="comments" label="评语" show-overflow-tooltip />
+      <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button-group>
             <el-button
@@ -218,7 +226,12 @@ const rules = {
 }
 
 const handleFilterChange = async () => {
-  await fetchGrades()
+  try {
+    await fetchGrades()
+  } catch (error) {
+    console.error('筛选失败:', error)
+    ElMessage.error('筛选失败')
+  }
 }
 
 const fetchGrades = async () => {
@@ -236,9 +249,18 @@ const fetchGrades = async () => {
 
     // 发送请求
     const response = await axios.get(`/teacher/grades?${queryParams.toString()}`)
-    grades.value = response.data
+    
+    // 确保数据正确加载
+    if (Array.isArray(response.data)) {
+      grades.value = response.data
+    } else {
+      console.error('Invalid response data:', response.data)
+      grades.value = []
+      ElMessage.error('获取成绩数据格式错误')
+    }
   } catch (error) {
     console.error('获取成绩失败:', error)
+    grades.value = []
     ElMessage.error('获取成绩失败')
   } finally {
     loading.value = false
