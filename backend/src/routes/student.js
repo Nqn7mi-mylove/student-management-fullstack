@@ -8,11 +8,24 @@ const Course = require('../models/Course');
 // Get student's grades
 router.get('/grades', auth, checkRole('student'), async (req, res) => {
   try {
-    const grades = await Grade.find({ studentId: req.user.id })
+    const { courseId, semester } = req.query;
+    const query = { studentId: req.user.id };
+
+    // 添加筛选条件
+    if (courseId) {
+      query.courseId = courseId;
+    }
+    if (semester) {
+      query.semester = semester;
+    }
+
+    const grades = await Grade.find(query)
       .populate('courseId', 'name')
-      .populate('teacherId', 'name');
+      .populate('teacherId', 'username name')
+      .sort({ updatedAt: -1 }); // 按更新时间倒序排序
     res.json(grades);
   } catch (error) {
+    console.error('Get student grades error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -23,9 +36,11 @@ router.get('/courses', auth, checkRole('student'), async (req, res) => {
     const grades = await Grade.find({ studentId: req.user.id });
     const courseIds = grades.map(grade => grade.courseId);
     const courses = await Course.find({ _id: { $in: courseIds } })
-      .populate('teacherId', 'name');
+      .select('_id name teacherId')
+      .populate('teacherId', 'username name');
     res.json(courses);
   } catch (error) {
+    console.error('Get student courses error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

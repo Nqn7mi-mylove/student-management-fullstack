@@ -9,7 +9,7 @@
               v-model="filters.course"
               placeholder="选择课程"
               clearable
-              @change="filterGrades"
+              @change="handleFilterChange"
             >
               <el-option
                 v-for="course in courses"
@@ -23,7 +23,7 @@
               v-model="filters.semester"
               placeholder="选择学期"
               clearable
-              @change="filterGrades"
+              @change="handleFilterChange"
             >
               <el-option
                 v-for="semester in semesters"
@@ -32,12 +32,13 @@
                 :value="semester"
               />
             </el-select>
+            <el-button type="primary" @click="resetFilters">重置筛选</el-button>
           </div>
         </div>
       </template>
 
       <el-table
-        :data="filteredGrades"
+        :data="grades"
         style="width: 100%"
         v-loading="loading"
       >
@@ -125,20 +126,6 @@ const getSemesterLabel = (semester) => {
   return semesterMap[semester] || semester
 }
 
-const filteredGrades = computed(() => {
-  let result = [...grades.value]
-  
-  if (filters.value.course) {
-    result = result.filter(grade => grade.courseId._id === filters.value.course)
-  }
-  
-  if (filters.value.semester) {
-    result = result.filter(grade => grade.semester === filters.value.semester)
-  }
-  
-  return result
-})
-
 const getScoreClass = (score) => {
   if (score >= 90) return 'score-excellent'
   if (score >= 80) return 'score-good'
@@ -147,7 +134,7 @@ const getScoreClass = (score) => {
 }
 
 const calculateStatistics = () => {
-  const scores = filteredGrades.value.map(grade => grade.score)
+  const scores = grades.value.map(grade => grade.score)
   statistics.value = {
     average: scores.length ? scores.reduce((a, b) => a + b) / scores.length : 0,
     highest: scores.length ? Math.max(...scores) : 0,
@@ -158,27 +145,69 @@ const calculateStatistics = () => {
 const fetchGrades = async () => {
   try {
     loading.value = true
-    const response = await axios.get('/student/grades')
-    grades.value = response.data
-    calculateStatistics()
+    // 构建查询参数
+    const queryParams = new URLSearchParams()
+    
+    if (filters.value.course) {
+      queryParams.append('courseId', filters.value.course)
+    }
+    if (filters.value.semester) {
+      queryParams.append('semester', filters.value.semester)
+    }
+
+    // 发送请求
+    const response = await axios.get(`/student/grades?${queryParams.toString()}`)
+    
+    if (Array.isArray(response.data)) {
+      grades.value = response.data
+      calculateStatistics()
+    } else {
+      console.error('Invalid response data:', response.data)
+      grades.value = []
+      ElMessage.error('获取成绩数据格式错误')
+    }
   } catch (error) {
+    console.error('获取成绩失败:', error)
+    grades.value = []
     ElMessage.error('获取成绩数据失败')
   } finally {
     loading.value = false
   }
 }
 
-const fetchCourses = async () => {
+const resetFilters = () => {
+  filters.value.course = ''
+  filters.value.semester = ''
+  fetchGrades()
+}
+
+const handleFilterChange = async () => {
   try {
-    const response = await axios.get('/student/courses')
-    courses.value = response.data
+    await fetchGrades()
   } catch (error) {
-    ElMessage.error('获取课程列表失败')
+    console.error('筛选失败:', error)
+    ElMessage.error('筛选失败')
   }
 }
 
-const filterGrades = () => {
-  calculateStatistics()
+const fetchCourses = async () => {
+  try {
+    const response = await axios.get('/student/courses')
+    if (Array.isArray(response.data)) {
+      courses.value = response.data.map(course => ({
+        id: course._id,
+        name: course.name,
+        teacherName: course.teacherId?.name || '未知教师'
+      }))
+    } else {
+      console.error('Invalid courses data:', response.data)
+      courses.value = []
+      ElMessage.error('获取课程数据格式错误')
+    }
+  } catch (error) {
+    console.error('获取课程列表失败:', error)
+    ElMessage.error('获取课程列表失败')
+  }
 }
 
 onMounted(() => {
@@ -208,6 +237,10 @@ onMounted(() => {
 .filters {
   display: flex;
   gap: 16px;
+}
+
+.filters .el-select {
+  width: 200px;
 }
 
 .statistics {
@@ -264,7 +297,10 @@ onMounted(() => {
   background-color: #F8F9FB;
 }
 
-:deep(.el-select) {
-  width: 180px;
+:deep(.el-select-dropdown__item) {
+  padding-right: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
