@@ -28,17 +28,23 @@
       <el-form-item label="学生">
         <el-select 
           v-model="filters.studentId"
-          placeholder="所有学生"
+          placeholder="输入学生姓名搜索"
           clearable
+          filterable
           style="width: 200px;"
           @change="handleFilterChange"
+          :filter-method="filterStudent"
+          :loading="studentLoading"
         >
           <el-option
-            v-for="student in students"
+            v-for="student in filteredStudents"
             :key="student._id"
             :label="student.username"
             :value="student._id"
-          />
+          >
+            <span>{{ student.username }}</span>
+            <span class="student-info">{{ student.studentId }}</span>
+          </el-option>
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -266,6 +272,10 @@ const editingGrade = ref({
   comments: ''
 })
 
+const studentLoading = ref(false)
+const studentSearchQuery = ref('')
+const filteredStudents = ref([])
+
 // 表单规则
 const rules = {
   studentId: [
@@ -418,6 +428,29 @@ const resetFilters = () => {
   filters.value.studentId = ''
   fetchGrades()
 }
+
+// 过滤学生
+const filterStudent = (query) => {
+  studentSearchQuery.value = query
+  if (query) {
+    filteredStudents.value = students.value.filter(student => 
+      student.username.toLowerCase().includes(query.toLowerCase()) ||
+      student.studentId?.toLowerCase().includes(query.toLowerCase())
+    )
+  } else {
+    filteredStudents.value = students.value
+  }
+}
+
+// 初始化过滤后的学生列表
+onMounted(() => {
+  filteredStudents.value = students.value
+})
+
+// 监听学生数据变化
+watch(students, (newStudents) => {
+  filteredStudents.value = newStudents
+})
 
 // 初始化图表
 const initChart = () => {
@@ -578,5 +611,11 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.student-info {
+  float: right;
+  color: #909399;
+  font-size: 13px;
 }
 </style>
